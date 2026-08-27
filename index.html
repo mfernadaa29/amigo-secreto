@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorteo de Amigo Secreto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c2541;
+    --ink-soft:#2c3657;
+    --paper:#faf6ea;
+    --paper-dim:#efe8d6;
+    --gold:#c9a24b;
+    --gold-bright:#e0bd6c;
+    --teal:#2e5952;
+    --brick:#a63d2f;
+    --line:rgba(28,37,65,0.14);
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #263566 0%, transparent 60%),
+      radial-gradient(1000px 600px at 110% 10%, #24413c 0%, transparent 55%),
+      var(--ink);
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:56px 20px 90px;
+  }
+
+  .wrap{ width:100%; max-width:560px; }
+
+  .eyebrow{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .eyebrow::before{ content:""; width:22px; height:1px; background:var(--gold-bright); display:inline-block; }
+
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(32px, 6vw, 46px);
+    line-height:1.05;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+
+  .sub{ color:#c7cde2; font-size:15.5px; line-height:1.55; max-width:46ch; margin:0 0 34px; }
+
+  .conn-note{
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    color:#8fa3d1;
+    margin:-22px 0 26px;
+  }
+
+  .card{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:18px;
+    box-shadow:0 30px 60px -25px rgba(0,0,0,0.55);
+    overflow:hidden;
+  }
+
+  .card-section{ padding:28px 30px; }
+
+  label{
+    display:block;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    opacity:0.65;
+    margin-bottom:10px;
+  }
+
+  select{
+    width:100%;
+    appearance:none;
+    -webkit-appearance:none;
+    background:var(--paper-dim);
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:14px 42px 14px 16px;
+    font-family:'Inter', sans-serif;
+    font-size:15.5px;
+    font-weight:500;
+    color:var(--ink);
+    cursor:pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-position: calc(100% - 22px) 22px, calc(100% - 16px) 22px;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    transition:border-color 0.15s ease;
+  }
+  select:disabled{ opacity:0.6; cursor:wait; }
+  select:focus{ outline:none; border-color:var(--teal); }
+  select:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+
+  .status-line{ margin-top:12px; font-size:13px; line-height:1.5; min-height:18px; }
+  .status-line.ok{ color:var(--teal); }
+  .status-line.taken{ color:var(--brick); }
+
+  .perforation{ position:relative; height:0; border-top:2px dashed var(--line); }
+  .perforation::before, .perforation::after{
+    content:""; position:absolute; top:-11px; width:22px; height:22px; border-radius:50%; background:var(--ink);
+  }
+  .perforation::before{ left:-41px; }
+  .perforation::after{ right:-41px; }
+
+  .draw-section{ padding:26px 30px 30px; text-align:center; }
+
+  button.draw{
+    width:100%;
+    border:none;
+    border-radius:12px;
+    padding:17px 20px;
+    background:var(--teal);
+    color:var(--paper);
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:18px;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    transition:transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+    box-shadow:0 10px 24px -12px rgba(46,89,82,0.7);
+  }
+  button.draw:hover{ background:#376a62; transform:translateY(-1px); }
+  button.draw:active{ transform:translateY(1px) scale(0.99); }
+  button.draw:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+  button.draw:disabled{ background:#b9c0cf; cursor:not-allowed; box-shadow:none; transform:none; }
+
+  .hint{ margin-top:12px; font-size:12.5px; color:var(--ink-soft); opacity:0.6; }
+
+  .stubs-head{ display:flex; align-items:baseline; justify-content:space-between; margin:38px 2px 16px; }
+  .stubs-head h2{ font-family:'Fraunces', serif; font-size:19px; font-weight:600; margin:0; color:var(--paper); }
+  .stubs-count{ font-family:'Space Mono', monospace; font-size:12px; color:var(--gold-bright); }
+
+  #listaJugados{ display:flex; flex-wrap:wrap; gap:10px; min-height:44px; }
+
+  .stub-empty{ font-size:13.5px; color:#a9b0c9; font-style:italic; padding:14px 4px; }
+
+  .stub{
+    position:relative;
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:8px;
+    padding:8px 14px;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    box-shadow:0 8px 16px -8px rgba(0,0,0,0.5);
+    animation:drop 0.35s ease;
+  }
+  .stub::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--brick); flex:none; }
+
+  @keyframes drop{
+    from{ opacity:0; transform:translateY(-8px) rotate(-3deg); }
+    to{ opacity:1; transform:translateY(0) rotate(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce){ .stub{ animation:none; } button.draw{ transition:none; } }
+
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(15,20,38,0.72);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:10;
+  }
+  .overlay.open{ display:flex; }
+
+  .modal{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:16px;
+    max-width:360px;
+    width:100%;
+    padding:34px 30px 28px;
+    text-align:center;
+    box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);
+  }
+  .modal .eyebrow-m{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:8px;
+  }
+  .modal .name{ font-family:'Fraunces', serif; font-weight:700; font-size:32px; margin:0 0 6px; }
+  .modal .num{ font-family:'Space Mono', monospace; font-size:13px; color:var(--ink-soft); opacity:0.7; margin-bottom:24px; }
+  .modal-actions button{
+    width:100%; border:none; border-radius:9px; padding:13px 14px;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:14.5px; cursor:pointer;
+    background:var(--teal); color:var(--paper);
+  }
+  .modal-actions button:hover{ background:#376a62; }
+
+  .foot{ text-align:center; margin-top:40px; font-size:12px; color:#8891ac; }
+  .foot button{
+    background:none; border:none; color:#8891ac; text-decoration:underline;
+    font-size:12px; cursor:pointer; font-family:'Inter', sans-serif; padding:0;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">Edición familiar</div>
+  <h1>Sorteo de<br>Amigo Secreto</h1>
+  <p class="sub">Elige quién eres tú y descubre tu amigo secreto. No te tocará nadie de tu propia familia, y una vez lo veas, no hay vuelta atrás.</p>
+  <div class="conn-note" id="connNote">Conectando…</div>
+
+  <div class="card">
+    <div class="card-section">
+      <label for="personaSelect">¿Quién eres?</label>
+      <select id="personaSelect" disabled>
+        <option value="">— Elegir —</option>
+      </select>
+      <div class="status-line" id="statusLine"></div>
+    </div>
+
+    <div class="perforation"></div>
+
+    <div class="draw-section">
+      <button class="draw" id="drawBtn" disabled>Descubrir mi amigo secreto</button>
+      <div class="hint">Solo puedes verlo una vez, así que asegúrate de elegir tu nombre correcto</div>
+    </div>
+  </div>
+
+  <div class="stubs-head">
+    <h2>Ya tienen su amigo secreto</h2>
+    <span class="stubs-count" id="stubsCount">0</span>
+  </div>
+  <div id="listaJugados">
+    <div class="stub-empty">Todavía nadie ha jugado.</div>
+  </div>
+
+  <div class="foot">
+    No muestra a quién le tocó a nadie más — solo confirma quién ya jugó.
+    &nbsp;·&nbsp;
+    <button id="resetBtn">Reiniciar sorteo</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="eyebrow-m">Tu amigo secreto es</div>
+    <p class="name" id="modalName">—</p>
+    <p class="num" id="modalNum">Familia —</p>
+    <div class="modal-actions">
+      <button id="closeModalBtn">Ya lo vi, cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, onSnapshot,
+    runTransaction, collection, addDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ---------------------------------------------------------
+  // Configuración de tu proyecto Firebase (esto va público,
+  // no es información sensible: la seguridad real vive en las
+  // reglas de Firestore, no en estas llaves).
+  // ---------------------------------------------------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2Dk9_tmxNpKz1hLfFag5i-7Wj2uOZwDs",
+    authDomain: "amigo-secreto-familia-62d57.firebaseapp.com",
+    projectId: "amigo-secreto-familia-62d57",
+    storageBucket: "amigo-secreto-familia-62d57.firebasestorage.app",
+    messagingSenderId: "463648521243",
+    appId: "1:463648521243:web:8a2a2e4d918335e7a58cbe"
+  };
+
+  // ---------------------------------------------------------
+  // Clave de reinicio: NO se guarda en texto plano, solo su
+  // hash SHA-256. Para generar el hash de tu clave elegida:
+  //   1. Abre esta página publicada.
+  //   2. Abre la consola del navegador (F12).
+  //   3. Escribe: await hashPassword("tuClaveSecreta")
+  //   4. Copia el resultado y reemplázalo aquí abajo.
+  // El valor de ejemplo de abajo corresponde a "cambia-esta-clave".
+  // ---------------------------------------------------------
+  const RESET_PASSWORD_HASH = "795971b66d9e348eb9c54ace51ec4fd08ad2a4530208021e4c9c698738c96edc";
+
+  async function sha256Hex(texto) {
+    const datos = new TextEncoder().encode(texto);
+    const buffer = await crypto.subtle.digest("SHA-256", datos);
+    return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+  window.hashPassword = sha256Hex;
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const estadoRef = doc(db, "estado", "global");
+
+  var familias = {
+    "Quintero Moreno": ["Mary", "Lala", "Antonio", "Luna"],
+    "Urrego Moreno": ["Rafa", "Doris", "Sebas", "Chopper"],
+    "Sanchez Moreno": ["Memo", "Martha", "Santi"],
+    "Medina Moreno": ["Abuelita", "Stella", "Valen", "Mafe", "Nito"],
+    "Moreno Medina Chavez": ["Sonia", "Oscar", "Camila", "Thiago"],
+    "Sanchez Buitrago": ["Johan", "Yina", "Sara", "Majo"],
+    "Urrego Palacios": ["Andres", "Yaisa", "Alina"],
+    "Medina Lozano": ["Brayan", "Nataly", "Sergio", "Moly", "Angel"]
+  };
+
+  // Número fijo por persona, en el mismo orden en que fueron dadas.
+  // Solo este número se guarda en el registro privado ("logs"),
+  // nunca el nombre de quién le tocó a quién.
+  var personas = [];
+  var contador = 1;
+  for (var fam in familias) {
+    familias[fam].forEach(function (nombre) {
+      personas.push({ nombre: nombre, familia: fam, numero: contador });
+      contador++;
+    });
+  }
+
+  var estadoActual = { jugaron: [], asignadosTargets: [] };
+  var cargado = false;
+
+  function poblarSelect() {
+    var select = document.getElementById("personaSelect");
+    for (var fam in familias) {
+      var optgroup = document.createElement("optgroup");
+      optgroup.label = fam;
+      familias[fam].forEach(function (nombre) {
+        var opt = document.createElement("option");
+        opt.value = nombre;
+        opt.textContent = nombre;
+        optgroup.appendChild(opt);
+      });
+      select.appendChild(optgroup);
+    }
+  }
+
+  function actualizarEstadoUI() {
+    var nombre = document.getElementById("personaSelect").value;
+    var statusLine = document.getElementById("statusLine");
+    var drawBtn = document.getElementById("drawBtn");
+
+    if (!cargado) {
+      statusLine.textContent = "";
+      drawBtn.disabled = true;
+      return;
+    }
+
+    if (!nombre) {
+      statusLine.textContent = "";
+      statusLine.className = "status-line";
+      drawBtn.disabled = true;
+      return;
+    }
+
+    if ((estadoActual.jugaron || []).includes(nombre)) {
+      statusLine.textContent = "Ya descubriste tu amigo secreto. No puedes volver a sacar.";
+      statusLine.className = "status-line taken";
+      drawBtn.disabled = true;
+    } else {
+      statusLine.textContent = "Listo para descubrir tu amigo secreto.";
+      statusLine.className = "status-line ok";
+      drawBtn.disabled = false;
+    }
+  }
+
+  function renderJugados() {
+    var cont = document.getElementById("listaJugados");
+    var count = document.getElementById("stubsCount");
+    var nombres = estadoActual.jugaron || [];
+    count.textContent = nombres.length;
+
+    if (nombres.length === 0) {
+      cont.innerHTML = '<div class="stub-empty">Todavía nadie ha jugado.</div>';
+      return;
+    }
+
+    cont.innerHTML = nombres
+      .map(function (n) { return '<div class="stub">' + n + '</div>'; })
+      .join("");
+  }
+
+  async function elegirAmigoSecreto() {
+    var select = document.getElementById("personaSelect");
+    var drawBtn = document.getElementById("drawBtn");
+    var nombre = select.value;
+    if (!nombre) return;
+
+    var yo = personas.find(function (p) { return p.nombre === nombre; });
+    if (!yo) return;
+
+    drawBtn.disabled = true;
+    drawBtn.textContent = "Sorteando…";
+
+    try {
+      var elegido = await runTransaction(db, async function (tx) {
+        var snap = await tx.get(estadoRef);
+        var data = snap.exists() ? snap.data() : { jugaron: [], asignadosTargets: [] };
+        var jugaron = data.jugaron || [];
+        var asignadosTargets = data.asignadosTargets || [];
+
+        if (jugaron.indexOf(nombre) !== -1) {
+          throw new Error("YA_JUGO");
+        }
+
+        var candidatos = personas.filter(function (p) {
+          return p.familia !== yo.familia &&
+                 p.nombre !== yo.nombre &&
+                 asignadosTargets.indexOf(p.nombre) === -1;
+        });
+
+        if (candidatos.length === 0) {
+          throw new Error("SIN_CANDIDATOS");
+        }
+
+        var elegidoLocal = candidatos[Math.floor(Math.random() * candidatos.length)];
+
+        tx.set(estadoRef, {
+          jugaron: jugaron.concat([nombre]),
+          asignadosTargets: asignadosTargets.concat([elegidoLocal.nombre])
+        });
+
+        return elegidoLocal;
+      });
+
+      // Registro privado: solo el número queda escrito, nunca el nombre.
+      // Nadie puede leer esta colección salvo tú, desde el panel de Firebase.
+      await addDoc(collection(db, "logs"), {
+        nombre: nombre,
+        numero: elegido.numero,
+        timestamp: serverTimestamp()
+      });
+
+      document.getElementById("modalName").textContent = elegido.nombre;
+      document.getElementById("modalNum").textContent = "Familia " + elegido.familia;
+      document.getElementById("overlay").classList.add("open");
+
+    } catch (err) {
+      if (err.message === "YA_JUGO") {
+        alert("Ya descubriste tu amigo secreto, no puedes volver a sacar.");
+      } else if (err.message === "SIN_CANDIDATOS") {
+        alert("No hay más personas disponibles fuera de tu familia. Habla con quien organiza el sorteo.");
+      } else {
+        console.error(err);
+        alert("Hubo un problema de conexión. Intenta de nuevo en un momento.");
+      }
+    } finally {
+      drawBtn.textContent = "Descubrir mi amigo secreto";
+      actualizarEstadoUI();
+    }
+  }
+
+  function cerrarModal() {
+    document.getElementById("overlay").classList.remove("open");
+    actualizarEstadoUI();
+  }
+
+  async function reiniciarSorteo() {
+    var clave = prompt("Escribe la clave para reiniciar el sorteo:");
+    if (clave === null) return;
+
+    var hash = await sha256Hex(clave);
+    if (hash !== RESET_PASSWORD_HASH) {
+      alert("Clave incorrecta. No se reinició el sorteo.");
+      return;
+    }
+    if (!confirm("Esto borra todos los amigos secretos ya asignados, en todos los celulares. ¿Seguro que quieres reiniciar?")) return;
+
+    await setDoc(estadoRef, { jugaron: [], asignadosTargets: [] });
+  }
+
+  // Conexión en tiempo real: cualquier cambio hecho desde otro
+  // celular se refleja aquí automáticamente, sin recargar.
+  onSnapshot(estadoRef, function (snap) {
+    estadoActual = snap.exists() ? snap.data() : { jugaron: [], asignadosTargets: [] };
+    if (!cargado) {
+      cargado = true;
+      document.getElementById("personaSelect").disabled = false;
+      document.getElementById("connNote").style.display = "none";
+    }
+    actualizarEstadoUI();
+    renderJugados();
+  }, function (error) {
+    console.error(error);
+    document.getElementById("connNote").textContent = "No se pudo conectar. Revisa tu internet y recarga.";
+  });
+
+  // Si el documento no existe todavía (primera vez), créalo.
+  (async function asegurarEstadoInicial() {
+    var snap = await getDoc(estadoRef);
+    if (!snap.exists()) {
+      await setDoc(estadoRef, { jugaron: [], asignadosTargets: [] });
+    }
+  })();
+
+  poblarSelect();
+  document.getElementById("personaSelect").addEventListener("change", actualizarEstadoUI);
+  document.getElementById("drawBtn").addEventListener("click", elegirAmigoSecreto);
+  document.getElementById("closeModalBtn").addEventListener("click", cerrarModal);
+  document.getElementById("resetBtn").addEventListener("click", reiniciarSorteo);
+</script>
+
+</body>
+</html>
