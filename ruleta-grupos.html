@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruleta de Grupos — Día de Regalos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c2541;
+    --ink-soft:#2c3657;
+    --paper:#faf6ea;
+    --paper-dim:#efe8d6;
+    --gold:#c9a24b;
+    --gold-bright:#e0bd6c;
+    --teal:#2e5952;
+    --brick:#a63d2f;
+    --line:rgba(28,37,65,0.14);
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #263566 0%, transparent 60%),
+      radial-gradient(1000px 600px at 110% 10%, #24413c 0%, transparent 55%),
+      var(--ink);
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:56px 20px 90px;
+  }
+
+  .wrap{ width:100%; max-width:560px; }
+
+  .eyebrow{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .eyebrow::before{ content:""; width:22px; height:1px; background:var(--gold-bright); display:inline-block; }
+
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(32px, 6vw, 46px);
+    line-height:1.05;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+
+  .sub{ color:#c7cde2; font-size:15.5px; line-height:1.55; max-width:46ch; margin:0 0 22px; }
+
+  .conn-note{
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    color:#8fa3d1;
+    margin:0 0 26px;
+  }
+
+  .card{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:18px;
+    box-shadow:0 30px 60px -25px rgba(0,0,0,0.55);
+    overflow:hidden;
+  }
+
+  .card-section{ padding:28px 30px; }
+
+  label{
+    display:block;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    opacity:0.65;
+    margin-bottom:10px;
+  }
+
+  select{
+    width:100%;
+    appearance:none;
+    -webkit-appearance:none;
+    background:var(--paper-dim);
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:14px 42px 14px 16px;
+    font-family:'Inter', sans-serif;
+    font-size:15.5px;
+    font-weight:500;
+    color:var(--ink);
+    cursor:pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-position: calc(100% - 22px) 22px, calc(100% - 16px) 22px;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    transition:border-color 0.15s ease;
+  }
+  select:disabled{ opacity:0.6; cursor:wait; }
+  select:focus{ outline:none; border-color:var(--teal); }
+  select:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+
+  .status-line{ margin-top:12px; font-size:13px; line-height:1.5; min-height:18px; }
+  .status-line.ok{ color:var(--teal); }
+  .status-line.taken{ color:var(--brick); }
+
+  .perforation{ position:relative; height:0; border-top:2px dashed var(--line); }
+  .perforation::before, .perforation::after{
+    content:""; position:absolute; top:-11px; width:22px; height:22px; border-radius:50%; background:var(--ink);
+  }
+  .perforation::before{ left:-41px; }
+  .perforation::after{ right:-41px; }
+
+  /* ---- ruleta ---- */
+  .wheel-section{
+    padding:34px 30px 30px;
+    text-align:center;
+  }
+
+  .wheel-holder{
+    position:relative;
+    width:260px;
+    height:260px;
+    margin:0 auto 26px;
+  }
+
+  .pointer{
+    position:absolute;
+    top:-6px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0;
+    height:0;
+    border-left:14px solid transparent;
+    border-right:14px solid transparent;
+    border-top:22px solid var(--brick);
+    z-index:2;
+    filter:drop-shadow(0 3px 4px rgba(0,0,0,0.35));
+  }
+
+  #wheelSvg{
+    width:100%;
+    height:100%;
+    display:block;
+    transform:rotate(0deg);
+    transition:transform 4.2s cubic-bezier(0.15, 0.65, 0.1, 1);
+    filter:drop-shadow(0 14px 26px rgba(0,0,0,0.35));
+  }
+
+  .slice{ stroke:var(--paper); stroke-width:2; }
+  .slice.a{ fill:var(--paper-dim); }
+  .slice.b{ fill:#e3d8b8; }
+
+  .slice-label{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:20px;
+    fill:var(--ink);
+  }
+
+  .hub{ fill:var(--ink); stroke:var(--gold-bright); stroke-width:3; }
+
+  button.draw{
+    width:100%;
+    border:none;
+    border-radius:12px;
+    padding:17px 20px;
+    background:var(--teal);
+    color:var(--paper);
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:18px;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    transition:transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+    box-shadow:0 10px 24px -12px rgba(46,89,82,0.7);
+  }
+  button.draw:hover{ background:#376a62; transform:translateY(-1px); }
+  button.draw:active{ transform:translateY(1px) scale(0.99); }
+  button.draw:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+  button.draw:disabled{ background:#b9c0cf; cursor:not-allowed; box-shadow:none; transform:none; }
+
+  .hint{ margin-top:12px; font-size:12.5px; color:var(--ink-soft); opacity:0.6; }
+
+  .stubs-head{ display:flex; align-items:baseline; justify-content:space-between; margin:38px 2px 16px; }
+  .stubs-head h2{ font-family:'Fraunces', serif; font-size:19px; font-weight:600; margin:0; color:var(--paper); }
+  .stubs-count{ font-family:'Space Mono', monospace; font-size:12px; color:var(--gold-bright); }
+
+  #listaAsignados{ display:flex; flex-direction:column; gap:10px; }
+
+  .stub-empty{ font-size:13.5px; color:#a9b0c9; font-style:italic; padding:14px 4px; }
+
+  .stub{
+    position:relative;
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:10px;
+    padding:12px 16px;
+    font-family:'Inter', sans-serif;
+    font-size:13.5px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    box-shadow:0 8px 16px -8px rgba(0,0,0,0.5);
+    animation:drop 0.35s ease;
+  }
+  .stub .fam{ font-weight:600; }
+  .stub .grp{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    color:var(--teal);
+    white-space:nowrap;
+  }
+
+  @keyframes drop{
+    from{ opacity:0; transform:translateY(-8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .stub{ animation:none; }
+    #wheelSvg{ transition:none; }
+  }
+
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(15,20,38,0.72);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:10;
+  }
+  .overlay.open{ display:flex; }
+
+  .modal{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:16px;
+    max-width:380px;
+    width:100%;
+    padding:34px 30px 28px;
+    text-align:center;
+    box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);
+  }
+  .modal .eyebrow-m{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:8px;
+  }
+  .modal .grupo-title{ font-family:'Fraunces', serif; font-weight:700; font-size:30px; margin:0 0 18px; }
+  .modal .ingredientes{
+    text-align:left;
+    background:var(--paper-dim);
+    border-radius:10px;
+    padding:16px 18px;
+    margin:0 0 22px;
+    list-style:none;
+  }
+  .modal .ingredientes li{
+    font-size:14.5px;
+    padding:5px 0;
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  .modal .ingredientes li::before{
+    content:"";
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background:var(--brick);
+    flex:none;
+    transform:translateY(-2px);
+  }
+  .modal-actions button{
+    width:100%; border:none; border-radius:9px; padding:13px 14px;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:14.5px; cursor:pointer;
+    background:var(--teal); color:var(--paper);
+  }
+  .modal-actions button:hover{ background:#376a62; }
+
+  .foot{ text-align:center; margin-top:40px; font-size:12px; color:#8891ac; }
+  .foot button{
+    background:none; border:none; color:#8891ac; text-decoration:underline;
+    font-size:12px; cursor:pointer; font-family:'Inter', sans-serif; padding:0;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">Día de regalos</div>
+  <h1>Ruleta de<br>Grupos</h1>
+  <p class="sub">Elige qué familia eres y gira la ruleta para saber qué grupo de ingredientes te toca llevar. Es público — todos pueden ver qué le tocó a cada familia.</p>
+  <div class="conn-note" id="connNote">Conectando…</div>
+
+  <div class="card">
+    <div class="card-section">
+      <label for="familiaSelect">¿Qué familia eres?</label>
+      <select id="familiaSelect" disabled>
+        <option value="">— Elegir —</option>
+      </select>
+      <div class="status-line" id="statusLine"></div>
+    </div>
+
+    <div class="perforation"></div>
+
+    <div class="wheel-section">
+      <div class="wheel-holder">
+        <div class="pointer"></div>
+        <svg id="wheelSvg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <!-- 8 slices, generadas manualmente para un circulo de r=140 centrado en 150,150 -->
+          <path class="slice a" d="M150,150 L150,10 A140,140 0 0,1 249,51 Z"></path>
+          <path class="slice b" d="M150,150 L249,51 A140,140 0 0,1 290,150 Z"></path>
+          <path class="slice a" d="M150,150 L290,150 A140,140 0 0,1 249,249 Z"></path>
+          <path class="slice b" d="M150,150 L249,249 A140,140 0 0,1 150,290 Z"></path>
+          <path class="slice a" d="M150,150 L150,290 A140,140 0 0,1 51,249 Z"></path>
+          <path class="slice b" d="M150,150 L51,249 A140,140 0 0,1 10,150 Z"></path>
+          <path class="slice a" d="M150,150 L10,150 A140,140 0 0,1 51,51 Z"></path>
+          <path class="slice b" d="M150,150 L51,51 A140,140 0 0,1 150,10 Z"></path>
+
+          <text class="slice-label" x="186.4" y="62.2"  text-anchor="middle" dominant-baseline="middle">1</text>
+          <text class="slice-label" x="237.8" y="113.6" text-anchor="middle" dominant-baseline="middle">2</text>
+          <text class="slice-label" x="237.8" y="186.4" text-anchor="middle" dominant-baseline="middle">3</text>
+          <text class="slice-label" x="186.4" y="237.8" text-anchor="middle" dominant-baseline="middle">4</text>
+          <text class="slice-label" x="113.6" y="237.8" text-anchor="middle" dominant-baseline="middle">5</text>
+          <text class="slice-label" x="62.2"  y="186.4" text-anchor="middle" dominant-baseline="middle">6</text>
+          <text class="slice-label" x="62.2"  y="113.6" text-anchor="middle" dominant-baseline="middle">7</text>
+          <text class="slice-label" x="113.6" y="62.2"  text-anchor="middle" dominant-baseline="middle">8</text>
+
+          <circle class="hub" cx="150" cy="150" r="20"></circle>
+        </svg>
+      </div>
+
+      <button class="draw" id="drawBtn" disabled>Girar la ruleta</button>
+      <div class="hint">Solo puedes girar una vez por familia, así que confirma bien quién eres</div>
+    </div>
+  </div>
+
+  <div class="stubs-head">
+    <h2>Grupos ya asignados</h2>
+    <span class="stubs-count" id="stubsCount">0 / 8</span>
+  </div>
+  <div id="listaAsignados">
+    <div class="stub-empty">Todavía nadie ha girado la ruleta.</div>
+  </div>
+
+  <div class="foot">
+    <button id="resetBtn">Reiniciar ruleta</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="eyebrow-m">Te tocó</div>
+    <p class="grupo-title" id="modalGrupoTitle">Grupo —</p>
+    <ul class="ingredientes" id="modalIngredientes"></ul>
+    <div class="modal-actions">
+      <button id="closeModalBtn">Listo, cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, onSnapshot,
+    runTransaction, collection, addDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // Mismo proyecto Firebase que el sorteo de amigo secreto.
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2Dk9_tmxNpKz1hLfFag5i-7Wj2uOZwDs",
+    authDomain: "amigo-secreto-familia-62d57.firebaseapp.com",
+    projectId: "amigo-secreto-familia-62d57",
+    storageBucket: "amigo-secreto-familia-62d57.firebasestorage.app",
+    messagingSenderId: "463648521243",
+    appId: "1:463648521243:web:8a2a2e4d918335e7a58cbe"
+  };
+
+  // ---------------------------------------------------------
+  // Clave de reinicio (hash SHA-256, no texto plano). Para
+  // generar la tuya: abre esta página publicada, abre la
+  // consola (F12) y escribe: await hashPassword("tuClave")
+  // Copia el resultado aquí abajo. El valor de ejemplo de
+  // abajo corresponde a "cambia-esta-clave".
+  // ---------------------------------------------------------
+  const RESET_PASSWORD_HASH = "795971b66d9e348eb9c54ace51ec4fd08ad2a4530208021e4c9c698738c96edc";
+
+  async function sha256Hex(texto) {
+    const datos = new TextEncoder().encode(texto);
+    const buffer = await crypto.subtle.digest("SHA-256", datos);
+    return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+  window.hashPassword = sha256Hex;
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const estadoRef = doc(db, "ruletaEstado", "global");
+
+  var familias = [
+    "Quintero Moreno",
+    "Urrego Moreno",
+    "Sanchez Moreno",
+    "Medina Moreno",
+    "Moreno Medina Chavez",
+    "Sanchez Buitrago",
+    "Urrego Palacios",
+    "Medina Lozano"
+  ];
+
+  // ---------------------------------------------------------
+  // EDITA AQUÍ los ingredientes de cada grupo (1 a 8).
+  // "titulo" es opcional — si lo dejas vacío se muestra
+  // "Grupo N". Los ingredientes de ejemplo son solo relleno,
+  // reemplázalos por los reales cuando los tengas.
+  // ---------------------------------------------------------
+  var grupos = {
+    1: { titulo: "", ingredientes: ["Ingrediente 1", "Ingrediente 2", "Ingrediente 3"] },
+    2: { titulo: "", ingredientes: ["Ingrediente 1", "Ingrediente 2", "Ingrediente 3"] },
+    3: { titulo: "", ingredientes: ["Ingrediente 1", "Ingrediente 2", "Ingrediente 3"] },
+    4: { titulo: "", ingredientes: ["Ingrediente 1", "Ingrediente 2", "Ingrediente 3"] },
+    5: { titulo: "", ingredientes: ["Ingrediente 1", "Ingrediente 2", "Ingrediente 3"] },
+    6: { titulo: "", ingredientes: ["Ingrediente 1", "Ingrediente 2", "Ingrediente 3"] },
+    7: { titulo: "", ingredientes: ["Ingrediente 1", "Ingrediente 2", "Ingrediente 3"] },
+    8: { titulo: "", ingredientes: ["Ingrediente 1", "Ingrediente 2", "Ingrediente 3"] }
+  };
+
+  var estadoActual = { asignaciones: {} }; // { "Medina Moreno": 3, ... }
+  var cargado = false;
+
+  // Ángulo (en grados, medido en sentido horario desde arriba)
+  // del centro de cada gajo, para calcular a dónde girar.
+  var anguloCentro = { 1: 22.5, 2: 67.5, 3: 112.5, 4: 157.5, 5: 202.5, 6: 247.5, 7: 292.5, 8: 337.5 };
+
+  function poblarSelect() {
+    var select = document.getElementById("familiaSelect");
+    familias.forEach(function (fam) {
+      var opt = document.createElement("option");
+      opt.value = fam;
+      opt.textContent = fam;
+      select.appendChild(opt);
+    });
+  }
+
+  function actualizarEstadoUI() {
+    var familia = document.getElementById("familiaSelect").value;
+    var statusLine = document.getElementById("statusLine");
+    var drawBtn = document.getElementById("drawBtn");
+
+    if (!cargado) {
+      statusLine.textContent = "";
+      drawBtn.disabled = true;
+      return;
+    }
+
+    if (!familia) {
+      statusLine.textContent = "";
+      statusLine.className = "status-line";
+      drawBtn.disabled = true;
+      return;
+    }
+
+    if (estadoActual.asignaciones && estadoActual.asignaciones[familia] !== undefined) {
+      statusLine.textContent = "Esta familia ya giró la ruleta. Le tocó el grupo " + estadoActual.asignaciones[familia] + ".";
+      statusLine.className = "status-line taken";
+      drawBtn.disabled = true;
+    } else {
+      statusLine.textContent = "Lista para girar.";
+      statusLine.className = "status-line ok";
+      drawBtn.disabled = false;
+    }
+  }
+
+  function renderAsignados() {
+    var cont = document.getElementById("listaAsignados");
+    var count = document.getElementById("stubsCount");
+    var asignaciones = estadoActual.asignaciones || {};
+    var nombres = Object.keys(asignaciones);
+    count.textContent = nombres.length + " / 8";
+
+    if (nombres.length === 0) {
+      cont.innerHTML = '<div class="stub-empty">Todavía nadie ha girado la ruleta.</div>';
+      return;
+    }
+
+    cont.innerHTML = nombres
+      .map(function (fam) {
+        return '<div class="stub"><span class="fam">' + fam + '</span><span class="grp">Grupo ' + asignaciones[fam] + '</span></div>';
+      })
+      .join("");
+  }
+
+  function girarRuletaVisual(numeroGanador, callback) {
+    var svg = document.getElementById("wheelSvg");
+    var vueltasCompletas = 5;
+    var anguloFinal = (360 - anguloCentro[numeroGanador]) % 360;
+    var rotacionTotal = vueltasCompletas * 360 + anguloFinal;
+
+    svg.style.transform = "rotate(" + rotacionTotal + "deg)";
+
+    var yaEjecutado = false;
+    function alTerminar() {
+      if (yaEjecutado) return;
+      yaEjecutado = true;
+      svg.removeEventListener("transitionend", alTerminar);
+      callback();
+    }
+    svg.addEventListener("transitionend", alTerminar);
+    // Respaldo por si transitionend no dispara (reduced motion, etc).
+    setTimeout(alTerminar, 4500);
+  }
+
+  async function girar() {
+    var select = document.getElementById("familiaSelect");
+    var drawBtn = document.getElementById("drawBtn");
+    var familia = select.value;
+    if (!familia) return;
+
+    drawBtn.disabled = true;
+    select.disabled = true;
+
+    try {
+      var numeroGanador = await runTransaction(db, async function (tx) {
+        var snap = await tx.get(estadoRef);
+        var data = snap.exists() ? snap.data() : { asignaciones: {} };
+        var asignaciones = data.asignaciones || {};
+
+        if (asignaciones[familia] !== undefined) {
+          throw new Error("YA_GIRO");
+        }
+
+        var usados = Object.values(asignaciones);
+        var disponibles = [1, 2, 3, 4, 5, 6, 7, 8].filter(function (n) {
+          return usados.indexOf(n) === -1;
+        });
+
+        if (disponibles.length === 0) {
+          throw new Error("SIN_GRUPOS");
+        }
+
+        var elegido = disponibles[Math.floor(Math.random() * disponibles.length)];
+        var nuevasAsignaciones = Object.assign({}, asignaciones);
+        nuevasAsignaciones[familia] = elegido;
+
+        tx.set(estadoRef, { asignaciones: nuevasAsignaciones });
+
+        return elegido;
+      });
+
+      await addDoc(collection(db, "ruletaLogs"), {
+        familia: familia,
+        numero: numeroGanador,
+        timestamp: serverTimestamp()
+      });
+
+      girarRuletaVisual(numeroGanador, function () {
+        var grupo = grupos[numeroGanador];
+        var titulo = (grupo.titulo && grupo.titulo.trim()) ? grupo.titulo : ("Grupo " + numeroGanador);
+        document.getElementById("modalGrupoTitle").textContent = titulo;
+
+        var lista = document.getElementById("modalIngredientes");
+        lista.innerHTML = grupo.ingredientes.map(function (ing) {
+          return "<li>" + ing + "</li>";
+        }).join("");
+
+        document.getElementById("overlay").classList.add("open");
+      });
+
+    } catch (err) {
+      select.disabled = false;
+      if (err.message === "YA_GIRO") {
+        alert("Esta familia ya giró la ruleta, no puede volver a girar.");
+      } else if (err.message === "SIN_GRUPOS") {
+        alert("Ya se asignaron los 8 grupos. Habla con quien organiza.");
+      } else {
+        console.error(err);
+        alert("Hubo un problema de conexión. Intenta de nuevo en un momento.");
+      }
+      actualizarEstadoUI();
+    }
+  }
+
+  function cerrarModal() {
+    document.getElementById("overlay").classList.remove("open");
+    document.getElementById("familiaSelect").disabled = false;
+    actualizarEstadoUI();
+  }
+
+  async function reiniciarRuleta() {
+    var clave = prompt("Escribe la clave para reiniciar la ruleta:");
+    if (clave === null) return;
+
+    var hash = await sha256Hex(clave);
+    if (hash !== RESET_PASSWORD_HASH) {
+      alert("Clave incorrecta. No se reinició la ruleta.");
+      return;
+    }
+    if (!confirm("Esto borra todas las asignaciones de grupo, para todas las familias. ¿Seguro que quieres reiniciar?")) return;
+
+    await setDoc(estadoRef, { asignaciones: {} });
+
+    var svg = document.getElementById("wheelSvg");
+    svg.style.transition = "none";
+    svg.style.transform = "rotate(0deg)";
+    void svg.offsetWidth;
+    svg.style.transition = "";
+  }
+
+  onSnapshot(estadoRef, function (snap) {
+    estadoActual = snap.exists() ? snap.data() : { asignaciones: {} };
+    if (!cargado) {
+      cargado = true;
+      document.getElementById("familiaSelect").disabled = false;
+      document.getElementById("connNote").style.display = "none";
+    }
+    actualizarEstadoUI();
+    renderAsignados();
+  }, function (error) {
+    console.error(error);
+    document.getElementById("connNote").textContent = "No se pudo conectar. Revisa tu internet y recarga.";
+  });
+
+  (async function asegurarEstadoInicial() {
+    var snap = await getDoc(estadoRef);
+    if (!snap.exists()) {
+      await setDoc(estadoRef, { asignaciones: {} });
+    }
+  })();
+
+  poblarSelect();
+  document.getElementById("familiaSelect").addEventListener("change", actualizarEstadoUI);
+  document.getElementById("drawBtn").addEventListener("click", girar);
+  document.getElementById("closeModalBtn").addEventListener("click", cerrarModal);
+  document.getElementById("resetBtn").addEventListener("click", reiniciarRuleta);
+</script>
+
+</body>
+</html>
