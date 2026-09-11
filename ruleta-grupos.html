@@ -161,19 +161,19 @@
     filter:drop-shadow(0 14px 26px rgba(0,0,0,0.35));
   }
 
-  .slice{ stroke:var(--paper); stroke-width:2; transition:fill 0.4s ease, opacity 0.4s ease; }
+  .slice{ stroke:var(--paper); stroke-width:2; transition:fill 0.4s ease; }
   .slice.a{ fill:var(--paper-dim); }
   .slice.b{ fill:#e3d8b8; }
-  .slice.taken{ fill:#b9b09a !important; opacity:0.55; }
+  .slice.taken{ fill:var(--paper) !important; stroke:var(--paper); }
 
   .slice-label{
     font-family:'Space Mono', monospace;
     font-weight:700;
     font-size:20px;
     fill:var(--ink);
-    transition:opacity 0.4s ease;
+    transition:opacity 0.2s ease;
   }
-  .slice-label.taken{ opacity:0.4; text-decoration:line-through; }
+  .slice-label.taken{ opacity:0; }
 
   .hub{ fill:var(--ink); stroke:var(--gold-bright); stroke-width:3; }
 
@@ -449,13 +449,15 @@
     2: {
       titulo: "🥩 Carne de Res",
       ingredientes: [
-        "2.5 kg de carne de res (molida o desmechada) Ya sazonada con especias mexicanas"
+        "2.5 kg de carne de res (molida o desmechada)",
+        "Ya sazonada con especias mexicanas"
       ]
     },
     3: {
       titulo: "🍗 Pollo",
       ingredientes: [
-        "2.5 kg de pechuga de pollo en tiras o desmechada, ya sazonada"
+        "2.5 kg de pechuga de pollo en tiras o desmechada",
+        "Ya sazonada"
       ]
     },
     4: {
@@ -499,6 +501,7 @@
 
   var estadoActual = { asignaciones: {} }; // { "Medina Moreno": 3, ... }
   var cargado = false;
+  var girandoActualmente = false;
 
   // Ángulo (en grados, medido en sentido horario desde arriba)
   // del centro de cada gajo, para calcular a dónde girar.
@@ -528,6 +531,13 @@
     if (!familia) {
       statusLine.textContent = "";
       statusLine.className = "status-line";
+      drawBtn.disabled = true;
+      return;
+    }
+
+    if (girandoActualmente) {
+      statusLine.textContent = "Girando…";
+      statusLine.className = "status-line ok";
       drawBtn.disabled = true;
       return;
     }
@@ -609,6 +619,8 @@
 
     drawBtn.disabled = true;
     select.disabled = true;
+    girandoActualmente = true;
+    actualizarEstadoUI();
 
     try {
       var numeroGanador = await runTransaction(db, async function (tx) {
@@ -659,6 +671,7 @@
 
     } catch (err) {
       select.disabled = false;
+      girandoActualmente = false;
       if (err.message === "YA_GIRO") {
         alert("Esta familia ya giró la ruleta, no puede volver a girar.");
       } else if (err.message === "SIN_GRUPOS") {
@@ -674,6 +687,7 @@
   function cerrarModal() {
     document.getElementById("overlay").classList.remove("open");
     document.getElementById("familiaSelect").disabled = false;
+    girandoActualmente = false;
     actualizarEstadoUI();
   }
 
