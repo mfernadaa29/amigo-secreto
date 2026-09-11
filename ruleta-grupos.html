@@ -511,9 +511,12 @@
       circulo.setAttribute("class", "slice a");
       grupoSvg.appendChild(circulo);
 
+      // La etiqueta va desplazada del centro (no en 150,150), porque
+      // ahí encima está el círculo del centro (hub) y la taparía.
+      var pUnica = puntoEnCirculo(0, 95);
       var etiquetaUnica = document.createElementNS(svgNS, "text");
-      etiquetaUnica.setAttribute("x", "150");
-      etiquetaUnica.setAttribute("y", "150");
+      etiquetaUnica.setAttribute("x", pUnica.x.toFixed(2));
+      etiquetaUnica.setAttribute("y", pUnica.y.toFixed(2));
       etiquetaUnica.setAttribute("text-anchor", "middle");
       etiquetaUnica.setAttribute("dominant-baseline", "middle");
       etiquetaUnica.setAttribute("class", "slice-label");
