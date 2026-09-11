@@ -742,6 +742,14 @@
     document.getElementById("overlay").classList.remove("open");
     document.getElementById("familiaSelect").disabled = false;
     girandoActualmente = false;
+
+    var svg = document.getElementById("wheelSvg");
+    svg.style.transition = "none";
+    svg.style.transform = "rotate(0deg)";
+    void svg.offsetWidth; // fuerza el reflow para que el reset no se anime
+    svg.style.transition = "";
+
+    construirRueda(disponiblesActuales());
     actualizarEstadoUI();
   }
 
