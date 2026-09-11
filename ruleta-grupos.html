@@ -161,19 +161,15 @@
     filter:drop-shadow(0 14px 26px rgba(0,0,0,0.35));
   }
 
-  .slice{ stroke:var(--paper); stroke-width:2; transition:fill 0.4s ease; }
+  .slice{ stroke:var(--paper); stroke-width:2; }
   .slice.a{ fill:var(--paper-dim); }
   .slice.b{ fill:#e3d8b8; }
-  .slice.taken{ fill:var(--paper) !important; stroke:var(--paper); }
 
   .slice-label{
     font-family:'Space Mono', monospace;
     font-weight:700;
-    font-size:20px;
     fill:var(--ink);
-    transition:opacity 0.2s ease;
   }
-  .slice-label.taken{ opacity:0; }
 
   .hub{ fill:var(--ink); stroke:var(--gold-bright); stroke-width:3; }
 
@@ -331,25 +327,7 @@
       <div class="wheel-holder">
         <div class="pointer"></div>
         <svg id="wheelSvg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-          <!-- 8 slices, generadas manualmente para un circulo de r=140 centrado en 150,150 -->
-          <path id="slice1" class="slice a" d="M150,150 L150,10 A140,140 0 0,1 249,51 Z"></path>
-          <path id="slice2" class="slice b" d="M150,150 L249,51 A140,140 0 0,1 290,150 Z"></path>
-          <path id="slice3" class="slice a" d="M150,150 L290,150 A140,140 0 0,1 249,249 Z"></path>
-          <path id="slice4" class="slice b" d="M150,150 L249,249 A140,140 0 0,1 150,290 Z"></path>
-          <path id="slice5" class="slice a" d="M150,150 L150,290 A140,140 0 0,1 51,249 Z"></path>
-          <path id="slice6" class="slice b" d="M150,150 L51,249 A140,140 0 0,1 10,150 Z"></path>
-          <path id="slice7" class="slice a" d="M150,150 L10,150 A140,140 0 0,1 51,51 Z"></path>
-          <path id="slice8" class="slice b" d="M150,150 L51,51 A140,140 0 0,1 150,10 Z"></path>
-
-          <text id="label1" class="slice-label" x="186.4" y="62.2"  text-anchor="middle" dominant-baseline="middle">1</text>
-          <text id="label2" class="slice-label" x="237.8" y="113.6" text-anchor="middle" dominant-baseline="middle">2</text>
-          <text id="label3" class="slice-label" x="237.8" y="186.4" text-anchor="middle" dominant-baseline="middle">3</text>
-          <text id="label4" class="slice-label" x="186.4" y="237.8" text-anchor="middle" dominant-baseline="middle">4</text>
-          <text id="label5" class="slice-label" x="113.6" y="237.8" text-anchor="middle" dominant-baseline="middle">5</text>
-          <text id="label6" class="slice-label" x="62.2"  y="186.4" text-anchor="middle" dominant-baseline="middle">6</text>
-          <text id="label7" class="slice-label" x="62.2"  y="113.6" text-anchor="middle" dominant-baseline="middle">7</text>
-          <text id="label8" class="slice-label" x="113.6" y="62.2"  text-anchor="middle" dominant-baseline="middle">8</text>
-
+          <g id="wheelSlices"><!-- Las porciones se generan por JavaScript según cuántos números quedan disponibles --></g>
           <circle class="hub" cx="150" cy="150" r="20"></circle>
         </svg>
       </div>
@@ -449,13 +427,15 @@
     2: {
       titulo: "🥩 Carne de Res",
       ingredientes: [
-        "2.5 kg de carne de res (molida o desmechada) Ya sazonada con especias mexicanas"
+        "2.5 kg de carne de res (molida o desmechada)",
+        "Ya sazonada con especias mexicanas"
       ]
     },
     3: {
       titulo: "🍗 Pollo",
       ingredientes: [
-        "2.5 kg de pechuga de pollo en tiras o desmechada, ya sazonada"
+        "2.5 kg de pechuga de pollo en tiras o desmechada",
+        "Ya sazonada"
       ]
     },
     4: {
@@ -501,9 +481,91 @@
   var cargado = false;
   var girandoActualmente = false;
 
-  // Ángulo (en grados, medido en sentido horario desde arriba)
-  // del centro de cada gajo, para calcular a dónde girar.
-  var anguloCentro = { 1: 22.5, 2: 67.5, 3: 112.5, 4: 157.5, 5: 202.5, 6: 247.5, 7: 292.5, 8: 337.5 };
+  // Se recalcula cada vez que se redibuja la ruleta: guarda en qué
+  // ángulo quedó el centro de cada número todavía disponible.
+  var anguloCentroActual = {};
+
+  function puntoEnCirculo(anguloGrados, radio) {
+    var rad = anguloGrados * Math.PI / 180;
+    return {
+      x: 150 + radio * Math.sin(rad),
+      y: 150 - radio * Math.cos(rad)
+    };
+  }
+
+  function construirRueda(disponibles) {
+    var grupoSvg = document.getElementById("wheelSlices");
+    var svgNS = "http://www.w3.org/2000/svg";
+    grupoSvg.innerHTML = "";
+    anguloCentroActual = {};
+
+    var n = disponibles.length;
+    if (n === 0) return;
+
+    var tamanoFuente = n <= 2 ? 34 : (n <= 4 ? 26 : 20);
+
+    if (n === 1) {
+      // Un solo número disponible: la ruleta entera es ese número.
+      var circulo = document.createElementNS(svgNS, "circle");
+      circulo.setAttribute("cx", "150");
+      circulo.setAttribute("cy", "150");
+      circulo.setAttribute("r", "140");
+      circulo.setAttribute("class", "slice a");
+      grupoSvg.appendChild(circulo);
+
+      var etiquetaUnica = document.createElementNS(svgNS, "text");
+      etiquetaUnica.setAttribute("x", "150");
+      etiquetaUnica.setAttribute("y", "150");
+      etiquetaUnica.setAttribute("text-anchor", "middle");
+      etiquetaUnica.setAttribute("dominant-baseline", "middle");
+      etiquetaUnica.setAttribute("class", "slice-label");
+      etiquetaUnica.style.fontSize = tamanoFuente + "px";
+      etiquetaUnica.textContent = disponibles[0];
+      grupoSvg.appendChild(etiquetaUnica);
+
+      anguloCentroActual[disponibles[0]] = 0;
+      return;
+    }
+
+    var anguloPorGajo = 360 / n;
+
+    disponibles.forEach(function (numero, i) {
+      var inicio = i * anguloPorGajo;
+      var fin = (i + 1) * anguloPorGajo;
+      var medio = inicio + anguloPorGajo / 2;
+
+      var p1 = puntoEnCirculo(inicio, 140);
+      var p2 = puntoEnCirculo(fin, 140);
+      var largeArc = anguloPorGajo > 180 ? 1 : 0;
+
+      var path = document.createElementNS(svgNS, "path");
+      var d = "M150,150 L" + p1.x.toFixed(2) + "," + p1.y.toFixed(2) +
+              " A140,140 0 " + largeArc + ",1 " + p2.x.toFixed(2) + "," + p2.y.toFixed(2) + " Z";
+      path.setAttribute("d", d);
+      path.setAttribute("class", "slice " + (i % 2 === 0 ? "a" : "b"));
+      grupoSvg.appendChild(path);
+
+      var pEtiqueta = puntoEnCirculo(medio, 95);
+      var texto = document.createElementNS(svgNS, "text");
+      texto.setAttribute("x", pEtiqueta.x.toFixed(2));
+      texto.setAttribute("y", pEtiqueta.y.toFixed(2));
+      texto.setAttribute("text-anchor", "middle");
+      texto.setAttribute("dominant-baseline", "middle");
+      texto.setAttribute("class", "slice-label");
+      texto.style.fontSize = tamanoFuente + "px";
+      texto.textContent = numero;
+      grupoSvg.appendChild(texto);
+
+      anguloCentroActual[numero] = medio;
+    });
+  }
+
+  function disponiblesActuales() {
+    var usados = Object.values(estadoActual.asignaciones || {});
+    return [1, 2, 3, 4, 5, 6, 7, 8].filter(function (n) {
+      return usados.indexOf(n) === -1;
+    });
+  }
 
   function poblarSelect() {
     var select = document.getElementById("familiaSelect");
@@ -551,22 +613,6 @@
     }
   }
 
-  function actualizarRuedaVisual() {
-    var usados = Object.values(estadoActual.asignaciones || {});
-    for (var n = 1; n <= 8; n++) {
-      var slice = document.getElementById("slice" + n);
-      var label = document.getElementById("label" + n);
-      if (!slice || !label) continue;
-      if (usados.indexOf(n) !== -1) {
-        slice.classList.add("taken");
-        label.classList.add("taken");
-      } else {
-        slice.classList.remove("taken");
-        label.classList.remove("taken");
-      }
-    }
-  }
-
   function renderAsignados() {
     var cont = document.getElementById("listaAsignados");
     var count = document.getElementById("stubsCount");
@@ -592,7 +638,19 @@
   function girarRuletaVisual(numeroGanador, callback) {
     var svg = document.getElementById("wheelSvg");
     var vueltasCompletas = 5;
-    var anguloFinal = (360 - anguloCentro[numeroGanador]) % 360;
+    var anguloCentroGanador = anguloCentroActual[numeroGanador];
+
+    if (anguloCentroGanador === undefined) {
+      // Caso muy raro: otra familia tomó un número justo en el
+      // instante del giro y la rueda local quedó desincronizada.
+      // Reconstruimos con el número ganador incluido para no fallar.
+      construirRueda(disponiblesActuales().concat([numeroGanador]).filter(function (v, i, arr) {
+        return arr.indexOf(v) === i;
+      }));
+      anguloCentroGanador = anguloCentroActual[numeroGanador] || 0;
+    }
+
+    var anguloFinal = (360 - anguloCentroGanador) % 360;
     var rotacionTotal = vueltasCompletas * 360 + anguloFinal;
 
     svg.style.transform = "rotate(" + rotacionTotal + "deg)";
@@ -718,7 +776,9 @@
     }
     actualizarEstadoUI();
     renderAsignados();
-    actualizarRuedaVisual();
+    if (!girandoActualmente) {
+      construirRueda(disponiblesActuales());
+    }
   }, function (error) {
     console.error(error);
     document.getElementById("connNote").textContent = "No se pudo conectar. Revisa tu internet y recarga.";
