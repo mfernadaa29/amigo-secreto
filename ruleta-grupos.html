@@ -161,16 +161,19 @@
     filter:drop-shadow(0 14px 26px rgba(0,0,0,0.35));
   }
 
-  .slice{ stroke:var(--paper); stroke-width:2; }
+  .slice{ stroke:var(--paper); stroke-width:2; transition:fill 0.4s ease, opacity 0.4s ease; }
   .slice.a{ fill:var(--paper-dim); }
   .slice.b{ fill:#e3d8b8; }
+  .slice.taken{ fill:#b9b09a !important; opacity:0.55; }
 
   .slice-label{
     font-family:'Space Mono', monospace;
     font-weight:700;
     font-size:20px;
     fill:var(--ink);
+    transition:opacity 0.4s ease;
   }
+  .slice-label.taken{ opacity:0.4; text-decoration:line-through; }
 
   .hub{ fill:var(--ink); stroke:var(--gold-bright); stroke-width:3; }
 
@@ -329,23 +332,23 @@
         <div class="pointer"></div>
         <svg id="wheelSvg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
           <!-- 8 slices, generadas manualmente para un circulo de r=140 centrado en 150,150 -->
-          <path class="slice a" d="M150,150 L150,10 A140,140 0 0,1 249,51 Z"></path>
-          <path class="slice b" d="M150,150 L249,51 A140,140 0 0,1 290,150 Z"></path>
-          <path class="slice a" d="M150,150 L290,150 A140,140 0 0,1 249,249 Z"></path>
-          <path class="slice b" d="M150,150 L249,249 A140,140 0 0,1 150,290 Z"></path>
-          <path class="slice a" d="M150,150 L150,290 A140,140 0 0,1 51,249 Z"></path>
-          <path class="slice b" d="M150,150 L51,249 A140,140 0 0,1 10,150 Z"></path>
-          <path class="slice a" d="M150,150 L10,150 A140,140 0 0,1 51,51 Z"></path>
-          <path class="slice b" d="M150,150 L51,51 A140,140 0 0,1 150,10 Z"></path>
+          <path id="slice1" class="slice a" d="M150,150 L150,10 A140,140 0 0,1 249,51 Z"></path>
+          <path id="slice2" class="slice b" d="M150,150 L249,51 A140,140 0 0,1 290,150 Z"></path>
+          <path id="slice3" class="slice a" d="M150,150 L290,150 A140,140 0 0,1 249,249 Z"></path>
+          <path id="slice4" class="slice b" d="M150,150 L249,249 A140,140 0 0,1 150,290 Z"></path>
+          <path id="slice5" class="slice a" d="M150,150 L150,290 A140,140 0 0,1 51,249 Z"></path>
+          <path id="slice6" class="slice b" d="M150,150 L51,249 A140,140 0 0,1 10,150 Z"></path>
+          <path id="slice7" class="slice a" d="M150,150 L10,150 A140,140 0 0,1 51,51 Z"></path>
+          <path id="slice8" class="slice b" d="M150,150 L51,51 A140,140 0 0,1 150,10 Z"></path>
 
-          <text class="slice-label" x="186.4" y="62.2"  text-anchor="middle" dominant-baseline="middle">1</text>
-          <text class="slice-label" x="237.8" y="113.6" text-anchor="middle" dominant-baseline="middle">2</text>
-          <text class="slice-label" x="237.8" y="186.4" text-anchor="middle" dominant-baseline="middle">3</text>
-          <text class="slice-label" x="186.4" y="237.8" text-anchor="middle" dominant-baseline="middle">4</text>
-          <text class="slice-label" x="113.6" y="237.8" text-anchor="middle" dominant-baseline="middle">5</text>
-          <text class="slice-label" x="62.2"  y="186.4" text-anchor="middle" dominant-baseline="middle">6</text>
-          <text class="slice-label" x="62.2"  y="113.6" text-anchor="middle" dominant-baseline="middle">7</text>
-          <text class="slice-label" x="113.6" y="62.2"  text-anchor="middle" dominant-baseline="middle">8</text>
+          <text id="label1" class="slice-label" x="186.4" y="62.2"  text-anchor="middle" dominant-baseline="middle">1</text>
+          <text id="label2" class="slice-label" x="237.8" y="113.6" text-anchor="middle" dominant-baseline="middle">2</text>
+          <text id="label3" class="slice-label" x="237.8" y="186.4" text-anchor="middle" dominant-baseline="middle">3</text>
+          <text id="label4" class="slice-label" x="186.4" y="237.8" text-anchor="middle" dominant-baseline="middle">4</text>
+          <text id="label5" class="slice-label" x="113.6" y="237.8" text-anchor="middle" dominant-baseline="middle">5</text>
+          <text id="label6" class="slice-label" x="62.2"  y="186.4" text-anchor="middle" dominant-baseline="middle">6</text>
+          <text id="label7" class="slice-label" x="62.2"  y="113.6" text-anchor="middle" dominant-baseline="middle">7</text>
+          <text id="label8" class="slice-label" x="113.6" y="62.2"  text-anchor="middle" dominant-baseline="middle">8</text>
 
           <circle class="hub" cx="150" cy="150" r="20"></circle>
         </svg>
@@ -436,7 +439,7 @@
   // ---------------------------------------------------------
   var grupos = {
     1: {
-      titulo: "Familia 1: 🏠 Tortillas y Plancha",
+      titulo: "🏠 Tortillas y Plancha",
       ingredientes: [
         "35-40 tortillas de trigo grandes",
         "1 rollo de papel aluminio",
@@ -444,33 +447,35 @@
       ]
     },
     2: {
-      titulo: "Familia 2: 🥩 Carne de Res",
+      titulo: "🥩 Carne de Res",
       ingredientes: [
-        "2.5 kg de carne de res (molida o desmechada) ya sazonada con especias mexicanas"
+        "2.5 kg de carne de res (molida o desmechada)",
+        "Ya sazonada con especias mexicanas"
       ]
     },
     3: {
-      titulo: "Familia 3: 🍗 Pollo",
+      titulo: "🍗 Pollo",
       ingredientes: [
-        "2.5 kg de pechuga de pollo en tiras o desmechada ya sazonada"
+        "2.5 kg de pechuga de pollo en tiras o desmechada",
+        "Ya sazonada"
       ]
     },
     4: {
-      titulo: "Familia 4: 🍚🌽 Arroz y Maíz",
+      titulo: "🍚🌽 Arroz y Maíz",
       ingredientes: [
         "Recipiente grande con arroz (blanco o mexicano)",
         "2 latas grandes de maíz tierno"
       ]
     },
     5: {
-      titulo: "Familia 5: 🫘🧀 Frijoles y Queso",
+      titulo: "🫘🧀 Frijoles y Queso",
       ingredientes: [
         "Recipiente grande con frijoles negros (o refritos)",
         "1.5 kg de queso rallado (tipo doble crema o cheddar)"
       ]
     },
     6: {
-      titulo: "Familia 6: 🥑🍅 Guacamole y Salsas",
+      titulo: "🥑🍅 Guacamole y Salsas",
       ingredientes: [
         "Guacamole abundante (10-12 aguacates)",
         "Pico de gallo",
@@ -478,7 +483,7 @@
       ]
     },
     7: {
-      titulo: "Familia 7: 🫓🧀 Nachos (Entrada)",
+      titulo: "🫓🧀 Nachos (Entrada)",
       ingredientes: [
         "4 bolsas grandes de nachos/totopos",
         "Queso cheddar fundido",
@@ -486,7 +491,7 @@
       ]
     },
     8: {
-      titulo: "Familia 8: 🥓🌻 Chicharrón (Topping Premium)",
+      titulo: "🥓🌻 Chicharrón (Topping Premium)",
       ingredientes: [
         "1.5 kg de chicharrón picado en cubos pequeños y bien crocantes",
         "Vasos y platos desechables"
@@ -540,6 +545,22 @@
     }
   }
 
+  function actualizarRuedaVisual() {
+    var usados = Object.values(estadoActual.asignaciones || {});
+    for (var n = 1; n <= 8; n++) {
+      var slice = document.getElementById("slice" + n);
+      var label = document.getElementById("label" + n);
+      if (!slice || !label) continue;
+      if (usados.indexOf(n) !== -1) {
+        slice.classList.add("taken");
+        label.classList.add("taken");
+      } else {
+        slice.classList.remove("taken");
+        label.classList.remove("taken");
+      }
+    }
+  }
+
   function renderAsignados() {
     var cont = document.getElementById("listaAsignados");
     var count = document.getElementById("stubsCount");
@@ -554,7 +575,10 @@
 
     cont.innerHTML = nombres
       .map(function (fam) {
-        return '<div class="stub"><span class="fam">' + fam + '</span><span class="grp">Grupo ' + asignaciones[fam] + '</span></div>';
+        var num = asignaciones[fam];
+        var grupo = grupos[num];
+        var etiqueta = (grupo && grupo.titulo && grupo.titulo.trim()) ? grupo.titulo : ("Grupo " + num);
+        return '<div class="stub"><span class="fam">' + fam + '</span><span class="grp">' + etiqueta + '</span></div>';
       })
       .join("");
   }
@@ -684,6 +708,7 @@
     }
     actualizarEstadoUI();
     renderAsignados();
+    actualizarRuedaVisual();
   }, function (error) {
     console.error(error);
     document.getElementById("connNote").textContent = "No se pudo conectar. Revisa tu internet y recarga.";
